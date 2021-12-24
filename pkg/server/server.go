@@ -23,7 +23,8 @@ func Start() {
 	e.GET("/me", users.MeHandler, middlewares.Auth)
 	e.GET("/users/:id", users.GetUserHandler)
 	e.POST("/users", users.CreateUserHandler)
-	e.POST("/session", users.CreateSessionHandler)
-	e.POST("/signout", users.SignOutHandler)
+
+	e.POST("/auth/session", users.CreateSessionHandler)
+	e.POST("/auth/signout", users.SignOutHandler)
 	e.Logger.Fatal(e.Start(":1323"))
 }
