@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"acropolis-backend/internal/users"
+	"acropolis-backend/pkg/users"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

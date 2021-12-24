@@ -1,7 +1,7 @@
 package users
 
 import (
-	"acropolis-backend/internal/fb"
+	"acropolis-backend/pkg/fb"
 	firebaseAuth "firebase.google.com/go/auth"
 	"fmt"
 	"github.com/labstack/echo/v4"

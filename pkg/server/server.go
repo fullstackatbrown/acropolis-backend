@@ -1,8 +1,8 @@
 package server
 
 import (
-	"acropolis-backend/internal/middlewares"
-	"acropolis-backend/internal/users"
+	"acropolis-backend/pkg/middlewares"
+	"acropolis-backend/pkg/users"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
@@ -12,10 +12,10 @@ func Start() {
 	e := echo.New()
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"},
-		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete, http.MethodOptions},
-		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderCookie},
-		ExposeHeaders: []string{echo.HeaderSetCookie},
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete, http.MethodOptions},
+		AllowHeaders:     []string{echo.HeaderContentType, echo.HeaderCookie},
+		ExposeHeaders:    []string{echo.HeaderSetCookie},
 		AllowCredentials: true,
 	}))
 

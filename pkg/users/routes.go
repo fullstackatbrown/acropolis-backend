@@ -1,7 +1,7 @@
 package users
 
 import (
-	"acropolis-backend/internal/fb"
+	"acropolis-backend/pkg/fb"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
