@@ -28,6 +28,23 @@ type UserToCreate struct {
 	DisplayName string `json:"displayName"`
 }
 
+// validate checks a UserToCreate struct for errors
+func (u *UserToCreate) validate() error {
+	if err := validateEmail(u.Email); err != nil {
+		return err
+	}
+
+	if err := validatePassword(u.Password); err != nil {
+		return err
+	}
+
+	if err := validateDisplayName(u.DisplayName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // AccessToken is a struct that represents an access token being exchanged for a session cookie.
 type AccessToken struct {
 	Token string `json:"token"`
