@@ -50,8 +50,14 @@ func GetAllUsersHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
-// CreateSessionHandler is a route handler that takes an ID token and adds a session cookie to the client.
-// Usage: e.POST("/session", StartSessionHandler)
+// CreateSessionHandler godoc
+// @Summary      Verifies and exchanges an access token for a session cookie.
+// @Description  verifies access token and returns session cookie
+// @Tags         accounts, users, auth
+// @Param token body string true "Access Token"
+// @Success      200  {object}  string
+// @Failure 400,500 {object} object
+// @Router       /auth/session [post]
 func CreateSessionHandler(c echo.Context) error {
 	accessToken := new(AccessToken)
 	if err := (&echo.DefaultBinder{}).BindBody(c, &accessToken); err != nil {
@@ -94,8 +100,12 @@ func MeHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, user.UserInfo)
 }
 
-// SignOutHandler is a route handler that deletes the session cookie from the requesting client.
-// Usage: e.POST("/signout", SignOutHandler)
+// SignOutHandler godoc
+// @Summary      Sign a user out by deleting the session cookie.
+// @Description  signs out the user
+// @Tags         accounts, users, auth
+// @Success      200  {object}  string
+// @Router       /auth/signout [post]
 func SignOutHandler(c echo.Context) error {
 	c.SetCookie(&http.Cookie{
 		Name:     "acropolis-session",
