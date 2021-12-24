@@ -11,23 +11,6 @@ import (
 	"strings"
 )
 
-// validate checks a UserToCreate struct for errors
-func (u *UserToCreate) validate() error {
-	if err := validateEmail(u.Email); err != nil {
-		return err
-	}
-
-	if err := validatePassword(u.Password); err != nil {
-		return err
-	}
-
-	if err := validateDisplayName(u.DisplayName); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // authClient is a global variable to hold the initialized Firebase Auth client
 var authClient *firebaseAuth.Client
 
