@@ -1,59 +1,18 @@
-package users
+package auth
 
 import (
-	"acropolis-backend/pkg/fb"
+	"acropolis-backend/pkg/firebase"
+	"acropolis-backend/pkg/user_mgt"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
 )
 
-// GetUserHandler is a route handler that gets a user by ID.
-// Usage: e.GET("/users/:id", GetUserHandler)
-func GetUserHandler(c echo.Context) error {
-	// User ID from path `users/:id`
-	id := c.Param("id")
-
-	user, err := GetUser(id)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, "User not found")
-	}
-	return c.JSON(http.StatusOK, user.UserInfo)
-}
-
-// CreateUserHandler is a route handler that creates a new user.
-// Usage: e.POST("/users", CreateUserHandler)
-func CreateUserHandler(c echo.Context) error {
-	newUser := new(UserToCreate)
-	if err := (&echo.DefaultBinder{}).BindBody(c, &newUser); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
-	}
-
-	if err := newUser.validate(); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	user, err := CreateUser(newUser)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error creating user")
-	}
-	return c.JSON(http.StatusOK, user.UserInfo)
-}
-
-// GetAllUsersHandler is a route handler that retrieves information corresponding to all users.
-// Usage: e.GET("/users/all", GetAllUsersHandler)
-func GetAllUsersHandler(c echo.Context) error {
-	users, err := GetAllUsers()
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "error fetching users")
-	}
-	return c.JSON(http.StatusOK, users)
-}
-
 // CreateSessionHandler godoc
 // @Summary      Verifies and exchanges an access token for a session cookie.
 // @Description  verifies access token and returns session cookie
-// @Tags         accounts, users, auth
+// @Tags         accounts, user_mgt, auth
 // @Param token body string true "Access Token"
 // @Success      200  {object}  string
 // @Failure 400,500 {object} object
@@ -71,7 +30,7 @@ func CreateSessionHandler(c echo.Context) error {
 	// The session cookie will have the same claims as the ID token.
 	// To only allow session cookie setting on recent sign-in, auth_time in ID token
 	// can be checked to ensure user was recently signed in before creating a session cookie.
-	cookie, err := authClient.SessionCookie(fb.FirebaseContext, accessToken.Token, expiresIn)
+	cookie, err := authClient.SessionCookie(firebase.FirebaseContext, accessToken.Token, expiresIn)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create session cookie")
 	}
@@ -88,10 +47,14 @@ func CreateSessionHandler(c echo.Context) error {
 	return c.String(http.StatusOK, "success")
 }
 
-// MeHandler is a route handler that returns user info corresponding to the currently authenticated user.
-// Usage: e.GET("/users/me", MeHandler)
+// MeHandler godoc
+// @Summary      Returns user information corresponding to the currently authenticated user.
+// @Description  returns user info for the current user.
+// @Tags         accounts, user_mgt, auth
+// @Success      200  {object}  UserInfo
+// @Router       /user_mgt/me [get]
 func MeHandler(c echo.Context) error {
-	user := GetUserFromContext(c)
+	user := user_mgt.GetUserFromContext(c)
 	if user == nil {
 		// User is not authenticated
 		return fmt.Errorf("user not authenticated")
@@ -103,7 +66,7 @@ func MeHandler(c echo.Context) error {
 // SignOutHandler godoc
 // @Summary      Sign a user out by deleting the session cookie.
 // @Description  signs out the user
-// @Tags         accounts, users, auth
+// @Tags         accounts, user_mgt, auth
 // @Success      200  {object}  string
 // @Router       /auth/signout [post]
 func SignOutHandler(c echo.Context) error {
@@ -112,6 +75,8 @@ func SignOutHandler(c echo.Context) error {
 		Value:    "",
 		HttpOnly: true,
 		MaxAge:   -1,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
 	})
 	return c.String(http.StatusOK, "Signed out")
 }

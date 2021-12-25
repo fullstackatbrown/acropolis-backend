@@ -1,30 +1,29 @@
-package users
+package user_mgt
 
 import (
-	"acropolis-backend/pkg/fb"
+	"acropolis-backend/pkg/firebase"
 	firebaseAuth "firebase.google.com/go/auth"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/api/iterator"
 	"log"
-	"net/http"
 	"strings"
 )
 
 // authClient is a global variable to hold the initialized Firebase Auth client
 var authClient *firebaseAuth.Client
 
-// GetAllUsers gets the user data for all registered users.
+// GetAllUsers gets the user data for all registered user_mgt.
 func GetAllUsers() ([]*UserRecord, error) {
 	var users []*UserRecord
-	iter := authClient.Users(fb.FirebaseContext, "")
+	iter := authClient.Users(firebase.FirebaseContext, "")
 	for {
 		fbUser, err := iter.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("error listing users: %s\n", err)
+			return nil, fmt.Errorf("error listing user_mgt: %s\n", err)
 		}
 		user := fbUserToUserRecord(fbUser.UserRecord)
 
@@ -40,7 +39,7 @@ func GetUser(id string) (*UserRecord, error) {
 		return nil, err
 	}
 
-	fbUser, err := authClient.GetUser(fb.FirebaseContext, id)
+	fbUser, err := authClient.GetUser(firebase.FirebaseContext, id)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user: %v\n", err)
 	}
@@ -54,7 +53,7 @@ func GetUserByEmail(email string) (*UserRecord, error) {
 		return nil, err
 	}
 
-	fbUser, err := authClient.GetUserByEmail(fb.FirebaseContext, email)
+	fbUser, err := authClient.GetUserByEmail(firebase.FirebaseContext, email)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user: %v\n", err)
 	}
@@ -68,29 +67,29 @@ func CreateUser(user *UserToCreate) (*UserRecord, error) {
 		return nil, err
 	}
 
-	// Create a user in Firebase Auth
-	u := (&firebaseAuth.UserToCreate{}).Email(user.Email).Password(user.Password).DisplayName(user.DisplayName)
-	fbUser, err := authClient.CreateUser(fb.FirebaseContext, u)
+	firestoreClient, err := firebase.FirebaseApp.Firestore(firebase.FirebaseContext)
 	if err != nil {
-		return nil, err
+		log.Fatalf("error getting Firestore client: %v\n", err)
+	}
+	defer firestoreClient.Close()
+
+	// Create a user in Firebase Auth
+	u := (&firebaseAuth.UserToCreate{}).Email(user.Email).Password(user.Password)
+	fbUser, err := authClient.CreateUser(firebase.FirebaseContext, u)
+	if err != nil {
+		return nil, fmt.Errorf("error creating user: %v\n", err)
+	}
+
+	// Create a user profile in Firestore
+	_, err = firestoreClient.Collection("user_mgt").Doc(fbUser.UID).Set(firebase.FirebaseContext, map[string]interface{}{
+		"displayName": user.DisplayName,
+		"permissions": []string{UserManagementReadPermission},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating user profile: %v\n", err)
 	}
 
 	return fbUserToUserRecord(fbUser), nil
-}
-
-// VerifySessionCookie verifies that the given session cookie is valid and returns the associated UserRecord if valid.
-func VerifySessionCookie(sessionCookie *http.Cookie) (*UserRecord, error) {
-	decoded, err := authClient.VerifySessionCookieAndCheckRevoked(fb.FirebaseContext, sessionCookie.Value)
-	if err != nil {
-		return nil, fmt.Errorf("error verifying cookie: %v\n", err)
-	}
-
-	user, err := GetUser(decoded.UID)
-	if err != nil {
-		return nil, fmt.Errorf("error getting user from cookie: %v\n", err)
-	}
-
-	return user, nil
 }
 
 // fbUserToUserRecord converts a Firebase ExportedUserRecord into a UserRecord
@@ -159,9 +158,10 @@ func validateID(id string) error {
 }
 
 func init() {
-	client, err := fb.FirebaseApp.Auth(fb.FirebaseContext)
+	aClient, err := firebase.FirebaseApp.Auth(firebase.FirebaseContext)
 	if err != nil {
 		log.Fatalf("error getting Auth client: %v\n", err)
 	}
-	authClient = client
+
+	authClient = aClient
 }

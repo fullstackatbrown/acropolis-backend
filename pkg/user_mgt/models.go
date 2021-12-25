@@ -1,4 +1,4 @@
-package users
+package user_mgt
 
 // UserInfo is a collection of standard profile information for a user.
 type UserInfo struct {
@@ -45,7 +45,8 @@ func (u *UserToCreate) validate() error {
 	return nil
 }
 
-// AccessToken is a struct that represents an access token being exchanged for a session cookie.
-type AccessToken struct {
-	Token string `json:"token"`
+// Permission is a struct that represents a permission that grants a user access to an action and/or resource.
+type Permission struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
 }

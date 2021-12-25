@@ -1,19 +1,19 @@
-package fb
+package firebase
 
 import (
 	"context"
-	firebase "firebase.google.com/go"
+	firebaseSDK "firebase.google.com/go"
 	"google.golang.org/api/option"
 )
 
 // FirebaseApp is a global variable to hold the initialized Firebase App object
-var FirebaseApp *firebase.App
+var FirebaseApp *firebaseSDK.App
 var FirebaseContext context.Context
 
 func initializeFirebaseApp() {
 	ctx := context.Background()
 	opt := option.WithCredentialsFile("/Users/nathanluu/Downloads/acropolis-dev-729cc-firebase-adminsdk-78nmi-f42ecd2b95.json")
-	app, err := firebase.NewApp(ctx, nil, opt)
+	app, err := firebaseSDK.NewApp(ctx, nil, opt)
 	if err != nil {
 		panic(err.Error())
 	}
